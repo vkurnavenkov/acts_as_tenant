@@ -92,7 +92,7 @@ module ActsAsTenant
         # Create the association
         valid_options = options.slice(:foreign_key, :class_name, :inverse_of)
         fkey = valid_options[:foreign_key] || ActsAsTenant.fkey
-        belongs_to tenant, valid_options
+        belongs_to tenant, valid_options.merge(optional: !ActsAsTenant.configuration.require_tenant)
 
         default_scope lambda {
           if ActsAsTenant.configuration.require_tenant && ActsAsTenant.current_tenant.nil? && !ActsAsTenant.unscoped?
@@ -187,13 +187,13 @@ module ActsAsTenant
               if instance.new_record?
                 unless self.class.where(fkey.to_sym => [nil, instance[fkey]],
                                         field.to_sym => instance[field]).empty?
-                  errors.add(field, 'has already been taken') 
+                  errors.add(field, 'has already been taken')
                 end
               else
                 unless self.class.where(fkey.to_sym => [nil, instance[fkey]],
                                         field.to_sym => instance[field])
                                  .where.not(:id => instance.id).empty?
-                  errors.add(field, 'has already been taken') 
+                  errors.add(field, 'has already been taken')
                 end
 
               end
